@@ -1,6 +1,6 @@
 # ConvFade
 
-An experimental audio tool for integrating convolution into a crossfade.
+An experimental command-line audio tool for integrating convolution into a crossfade.
 
 #### Example:
 
@@ -8,7 +8,7 @@ An experimental audio tool for integrating convolution into a crossfade.
 
 <a href="./example/audio_b.wav">Audio B</a>: Joseph Haydn - *The Seasons* - MIT Concert Choir
 
-<a href="./example/result.wav"> ConvFade Result </a>
+<a href="./example/result.wav"> ConvFade Result </a> (with arguments `-l 10 -f 150`)
 
 #### Proccess:
 
