@@ -21,7 +21,7 @@ def main():
             help="Output audio file path.")
     arg_parser.add_argument("-l", "--length", type=float, default=3.0, \
             help="Length of crossfade desired in seconds (default: 3.0).")
-    arg_parser.add_argument("-f", "--frame", type=int, default=100, \
+    arg_parser.add_argument("-f", "--frame", type=int, default=200, \
             help="Length of FFT frames desired in milliseconds (default: 100).")
     args = arg_parser.parse_args()
 
@@ -78,7 +78,7 @@ def main():
     # Calculate ConvFade
     half_way = start_stft.shape[0] / 2
     ones_array = np.ones_like(start_stft[0])
-    lowerpasser = np.arange(0, 3)
+    highpasser = np.arange(0, 10)
     result_stft = []
     for i, _ in enumerate(start_stft):
         if i < half_way:
@@ -87,12 +87,17 @@ def main():
         else:
             start_scale = float(half_way - (i-half_way)) / half_way
             end_scale = 1.
-        start_filtered = start_stft[i]
-        end_filtered = end_stft[i]
-        start_filtered[lowerpasser] = 0
-        end_filtered[lowerpasser] = 0
-        convolved = np.multiply(start_scale * start_stft[i] + ones_array, \
-                end_scale * end_stft[i] + ones_array)
+        start_filtered = np.copy(start_stft[i])
+        end_filtered = np.copy(end_stft[i])
+        start_filtered[highpasser] = 0
+        end_filtered[highpasser] = 0
+        convolved = 8 * np.sqrt(np.multiply(start_scale * start_filtered, \
+                end_scale * end_filtered))
+        
+        convolved = convolved + ((1.0 - end_scale) * start_stft[i])
+        convolved = convolved + ((1.0 - start_scale) * end_stft[i])
+        # convolved = convolved + .8 * (start_scale * start_stft[i])
+        # convolved = convolved + .8 * (end_scale * end_stft[i])
         result_stft.append(convolved)
 
     result_stft = np.array(result_stft)
