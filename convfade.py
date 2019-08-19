@@ -62,23 +62,48 @@ def main():
     # Accomplish fade:
     # --------------------------------------------------------------------------
 
+    result = convfade(start_w, end_w, sr, args.length, args.frame)
+
+    # --------------------------------------------------------------------------
+    # Export result:
+    # --------------------------------------------------------------------------
+
+    librosa.output.write_wav(args.output, result, sr, norm=True)
+
+    sys.exit()
+
+def convfade(start_w, end_w, sr, fade_len, frame_len):
+    """ Accomplish a convolutional crossfade.
+
+    Parameters:
+    start_w (np.array) -- The audio waveform that the fade begins with.
+    end_w (np.array) -- The audio waveform that the fade ends with.
+    sr (int) -- Global sample rate (start_w and end_w should be matched
+                in sample rate beforehand).
+    fade_len (float) -- Length of the fade in seconds.
+    frame_len (int) -- Length of the STFT frames/windows.
+
+    Returns:
+    np.array -- Waveform of start_w and end_w stitched together by the
+                convolutional crossfade.
+    """
+
     # Fade length in number of samples
-    fade_len = int(sr * args.length)
+    fade_len = int(sr * fade_len)
 
     # Sample index in start audio at which fade begins
     fade_start = (start_w.shape[0] - 1) - fade_len
 
     # Frame length in number of samples
-    frame_len = int((args.frame / 1000.) * sr)
+    frame_len = int((frame_len / 1000.) * sr)
 
     start_stft = librosa.core.stft(start_w[fade_start:], n_fft=frame_len).T
     end_stft = librosa.core.stft(end_w[0:fade_len], n_fft=frame_len).T
     assert start_stft.shape == end_stft.shape, "STFT shapes not equal."
 
     # Calculate ConvFade
-    half_way = start_stft.shape[0] / 2
-    ones_array = np.ones_like(start_stft[0])
     result_stft = []
+    half_way = start_stft.shape[0] / 2
     for i, _ in enumerate(start_stft):
         if i < half_way:
             start_scale = 1.
@@ -89,22 +114,20 @@ def main():
 
         convolved = 8 * np.sqrt(np.multiply(start_scale * start_stft[i], \
                 end_scale * end_stft[i]))
-        convolved = convolved + ((1.0 - end_scale) * start_stft[i])
-        convolved = convolved + ((1.0 - start_scale) * end_stft[i])
+        convolved = convolved + ((1 - end_scale) * start_stft[i])
+        convolved = convolved + ((1 - start_scale) * end_stft[i])
 
         result_stft.append(convolved)
 
+    # Inverse STFT
     result_stft = np.array(result_stft)
     result_fade = librosa.core.istft(result_stft.T)
 
-    # --------------------------------------------------------------------------
-    # Export result:
-    # --------------------------------------------------------------------------
-
+    # Stitching together final product
     result = np.append(start_w[0:fade_start], result_fade)
     result = np.append(result, end_w[fade_len - 1:])
 
-    librosa.output.write_wav(args.output, result, sr, norm=True)
-
+    return result
+    
 if __name__ == "__main__":
     main()
