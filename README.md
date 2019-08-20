@@ -10,6 +10,6 @@ An experimental command-line audio tool for integrating convolution into a cross
 
 <a href="./example/result.wav"> ConvFade Result </a> (with arguments `-l 10 -f 150`)
 
-#### Proccess:
+#### Process:
 
 <img src="./images/diagram.jpg" width="500">
