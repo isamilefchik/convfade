@@ -123,7 +123,7 @@ def convfade(start_w, end_w, sr, fade_len, frame_len):
     end_stft = librosa.core.stft(end_w[0:fade_len_s], n_fft=frame_len_s).T
     assert start_stft.shape == end_stft.shape, "STFT shapes not equal."
 
-    # Calculate ConvFade
+    # Calculate convolution
     result_stft = []
     half_way = start_stft.shape[0] / 2
     for i, _ in enumerate(start_stft):
